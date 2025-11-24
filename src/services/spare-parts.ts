@@ -1,5 +1,5 @@
 import type { PaginatedQueryDto } from '@/types/paginated.types'
-import type { SparePartData } from '@/types/spare-part.types'
+import type { CreateSparePartEntry, SparePartData } from '@/types/spare-part.types'
 import { get, post, put, del } from '@/utils/rest-api'
 
 export const getSpareParts = (query: PaginatedQueryDto) => {
@@ -20,4 +20,8 @@ export const edit = (id: number, data: SparePartData) => {
 
 export const remove = (id: number) => {
   return del(`/spare-parts/${id}`)
+}
+
+export const createEntry = (data: CreateSparePartEntry[]) => {
+  return post('/spare-parts/entry', data)
 }

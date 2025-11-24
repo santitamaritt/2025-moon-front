@@ -11,3 +11,8 @@ export interface SparePart {
   createdAt?: string
   updatedAt?: string
 }
+export interface CreateSparePartEntry {
+  sparePartId: number
+  quantity: number
+  price: number
+}
