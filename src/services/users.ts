@@ -101,3 +101,7 @@ export const getRewardProgress = (workshopId: number) => {
 export const getAvailableCoupons = (workshopId: number) => {
   return get(`/users/coupons/available/${workshopId}`);
 };
+
+export const spendeeAuth = (code: string) => {
+  return post(`/users/spendee-auth`, { code })
+}
