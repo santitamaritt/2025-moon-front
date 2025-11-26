@@ -2,15 +2,15 @@ import type {
   ReviewEnum,
   SubCategroriesEnum,
   UpdateUser,
-} from '@/types/users.types'
-import { post, put, get } from '@/utils/rest-api'
+} from "@/types/users.types";
+import { post, put, get } from "@/utils/rest-api";
 
 export const login = (email: string, password: string) => {
-  return post('/users/login', {
+  return post("/users/login", {
     email,
     password,
-  })
-}
+  });
+};
 
 export const register = (
   email: string,
@@ -22,7 +22,7 @@ export const register = (
   addressLatitude?: number,
   addressLongitude?: number
 ) => {
-  return post('/users', {
+  return post("/users", {
     email,
     fullName,
     password,
@@ -31,26 +31,26 @@ export const register = (
     address,
     addressLatitude,
     addressLongitude,
-  })
-}
+  });
+};
 
 export const passwordRecovery = (email: string) => {
-  return post('/users/password-recovery', { email })
-}
+  return post("/users/password-recovery", { email });
+};
 
 export const changePassword = (
   email: string,
   token: string,
   newPassword: string
 ) => {
-  return post('/users/change-password', { email, token, newPassword })
-}
+  return post("/users/change-password", { email, token, newPassword });
+};
 
 export const updateUser = (user: UpdateUser, token: string) => {
-  return put('/users', user, {
+  return put("/users", user, {
     headers: { Authorization: `Bearer ${token}` },
-  })
-}
+  });
+};
 
 export const updateUserPassword = (
   currentPassword: string,
@@ -58,36 +58,46 @@ export const updateUserPassword = (
   token: string
 ) => {
   return put(
-    '/users/password',
+    "/users/password",
     { currentPassword, newPassword },
     { headers: { Authorization: `Bearer ${token}` } }
-  )
-}
+  );
+};
 
 export const getAllWorkshops = () => {
-  return get('/users/workshops')
-}
+  return get("/users/workshops");
+};
 
 export const reviewMechanic = (
   mechanicId: number,
   review: ReviewEnum,
+  appointmentId: number,
   subCategories?: SubCategroriesEnum[]
 ) => {
-  return post('/users/review', { mechanicId, review, subCategories })
-}
+  return post("/users/review", {
+    mechanicId,
+    review,
+    appointmentId,
+    subCategories,
+  });
+};
 
 export const getReviews = (mechanicId: number) => {
-  return get(`/users/review/${mechanicId}`)
-}
+  return get(`/users/review/${mechanicId}`);
+};
 
 export const getUserReviews = () => {
-  return get(`/users/review`)
-}
+  return get(`/users/review`);
+};
 
 export const getUserById = (id: number) => {
-  return get(`/users/${id}`)
-}
+  return get(`/users/${id}`);
+};
 
-export const spendeeAuth = (code: string) => {
-  return post(`/users/spendee-auth`, { code })
-}
+export const getRewardProgress = (workshopId: number) => {
+  return get(`/users/rewards/progress/${workshopId}`);
+};
+
+export const getAvailableCoupons = (workshopId: number) => {
+  return get(`/users/coupons/available/${workshopId}`);
+};
