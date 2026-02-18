@@ -105,11 +105,13 @@ export const VehicleTechSheet = ({
   colorIndex = 0,
   showCompletedServices = true,
   hasReminder = false,
+  isMechanic = false,
 }: {
   vehicle: TechSheetVehicle
   colorIndex?: number
   showCompletedServices?: boolean
   hasReminder?: boolean
+  isMechanic?: boolean
 }) => {
   const [historyOpen, setHistoryOpen] = useState(false)
   const [historyPage, setHistoryPage] = useState(0)
@@ -333,20 +335,24 @@ export const VehicleTechSheet = ({
                     </div>
                     <StatusBadge status={entry.vehicleStatusAtTime} />
                   </div>
-                  <div className="flex gap-4">
-                    <div className="flex items-center gap-1.5 text-xs text-muted-foreground">
-                      <DollarSign className="h-3.5 w-3.5" />
-                      <span className="font-medium text-foreground">
-                        ${entry.amountPaid.toLocaleString()}
-                      </span>
-                    </div>
-                    <div className="flex items-center gap-1.5 text-xs text-muted-foreground">
-                      <Building2 className="h-3.5 w-3.5" />
-                      <span className="font-medium text-foreground">
-                        {entry.workshopName}
-                      </span>
-                    </div>
-                  </div>
+                    {
+                      !isMechanic && (
+                        <div className="flex gap-4">
+                          <div className="flex items-center gap-1.5 text-xs text-muted-foreground">
+                            <DollarSign className="h-3.5 w-3.5" />
+                            <span className="font-medium text-foreground">
+                              ${entry.amountPaid.toLocaleString()}
+                            </span>
+                          </div>
+                          <div className="flex items-center gap-1.5 text-xs text-muted-foreground">
+                            <Building2 className="h-3.5 w-3.5" />
+                            <span className="font-medium text-foreground">
+                              {entry.workshopName}
+                            </span>
+                          </div>
+                        </div>
+                      )
+                    }
                 </div>
               ))}
 
