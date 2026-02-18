@@ -1,7 +1,18 @@
-import { useEffect, useState } from "react"
-import { TrendingUp, BarChart3, Calendar, Clock, Car, Store } from "lucide-react"
+import { useEffect, useMemo, useState } from "react"
+import { Link } from "react-router-dom"
+import {
+  TrendingUp,
+  BarChart3,
+  Calendar,
+  Clock,
+  Car,
+  Store,
+  AlertTriangle,
+  ShieldCheck,
+} from "lucide-react"
 import { Bar, BarChart, CartesianGrid, XAxis, Tooltip, ResponsiveContainer, YAxis } from "recharts"
 import { Badge } from "@/components/ui/badge"
+import { Button } from "@/components/ui/button"
 import { getClientDashboardStats, getClientHistoryAppointments } from "@/services/dashboards"
 import type { DashboardStats } from "@/types/dashboards.types"
 import type { Appointment } from "@/types/appointments.types"
@@ -10,6 +21,7 @@ import type { PaginatedQueryDto } from "@/types/paginated.types"
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select"
 import { Container } from "@/components/Container"
 import { CustomPagination } from "@/components/CustomPagination"
+import { getUserExpiringReminders, type ExpiringReminderApi } from "@/services/reminder"
 
 const VEHICLE_COLORS: Record<string, string> = {};
 const COLOR_PALETTE = [
@@ -41,9 +53,28 @@ export function UserDashboard() {
   const [mode, setMode] = useState<"count" | "totalCost">("count")
   const [loading, setLoading] = useState(true)
   const [loadingHistory, setLoadingHistory] = useState(true)
+  const [loadingExpiring, setLoadingExpiring] = useState(true)
+  const [expiringReminders, setExpiringReminders] = useState<ExpiringReminderApi[]>([])
 
   const [page, setPage] = useState(1)
   const itemsPerPage = 5
+
+  useEffect(() => {
+    const loadExpiring = async () => {
+      try {
+        setLoadingExpiring(true)
+        const data = await getUserExpiringReminders()
+        setExpiringReminders(Array.isArray(data) ? data : [])
+      } catch (error) {
+        console.error("Error cargando recordatorios por vencer/vencidos:", error)
+        setExpiringReminders([])
+      } finally {
+        setLoadingExpiring(false)
+      }
+    }
+
+    loadExpiring()
+  }, [])
 
   useEffect(() => {
     const loadData = async () => {
@@ -85,6 +116,52 @@ export function UserDashboard() {
 
     loadHistory();
   }, []);
+
+  const expiringSummary = useMemo(() => {
+    const labelOf = (r: ExpiringReminderApi): string => {
+      const serviceName = typeof r?.service?.name === "string" && r.service.name.trim() ? r.service.name.trim() : "Servicio"
+      const plate = typeof r?.vehicle?.licensePlate === "string" ? r.vehicle.licensePlate.trim() : ""
+      return plate ? `${serviceName} (${plate})` : serviceName
+    }
+
+    const detailOf = (r: ExpiringReminderApi): string | null => {
+      const status = r?.mileage?.status ?? r?.months?.status
+      if (status === "OVERDUE") {
+        if (typeof r?.mileage?.kmOverdue === "number" && r.mileage.kmOverdue > 0) {
+          return `${r.mileage.kmOverdue.toLocaleString()} km vencidos`
+        }
+        if (typeof r?.months?.daysOverdue === "number" && r.months.daysOverdue > 0) {
+          return `${r.months.daysOverdue} días vencidos`
+        }
+      }
+      if (status === "DUE_SOON") {
+        if (typeof r?.mileage?.kmRemaining === "number") {
+          return `faltan ${Math.max(0, r.mileage.kmRemaining).toLocaleString()} km`
+        }
+        if (typeof r?.months?.daysRemaining === "number") {
+          return `faltan ${Math.max(0, r.months.daysRemaining)} días`
+        }
+      }
+      return null
+    }
+
+    const expired: string[] = []
+    const expiring: string[] = []
+
+    for (const r of expiringReminders || []) {
+      const status = r?.mileage?.status ?? r?.months?.status
+      const item = (() => {
+        const base = labelOf(r)
+        const detail = detailOf(r)
+        return detail ? `${base} • ${detail}` : base
+      })()
+      if (status === "OVERDUE") expired.push(item)
+      else if (status === "DUE_SOON") expiring.push(item)
+    }
+
+    const uniq = (arr: string[]) => Array.from(new Set(arr)).sort((a, b) => a.localeCompare(b))
+    return { expired: uniq(expired), expiring: uniq(expiring) }
+  }, [expiringReminders])
 
   const vehicleKeys = chartData.length ? Object.keys(chartData[0]).filter((k) => k !== "service") : []
 
@@ -140,6 +217,87 @@ export function UserDashboard() {
             Análisis de servicios y estadísticas de tus vehículos
           </p>
         </div>
+
+        {loadingExpiring ? (
+          <div className="rounded-3xl border border-border/50 bg-card p-5 shadow-sm">
+            <div className="h-5 w-56 bg-muted/40 rounded-xl animate-pulse" />
+            <div className="mt-3 h-4 w-80 bg-muted/30 rounded-xl animate-pulse" />
+          </div>
+        ) : expiringSummary.expired.length > 0 || expiringSummary.expiring.length > 0 ? (
+          <div
+            className={[
+              "rounded-3xl border shadow-sm p-5",
+              expiringSummary.expired.length > 0
+                ? "border-destructive/30 bg-destructive/10"
+                : "border-amber-500/30 bg-amber-500/10",
+            ].join(" ")}
+          >
+            <div className="flex flex-col sm:flex-row sm:items-start sm:justify-between gap-4">
+              <div className="flex items-start gap-3">
+                <div
+                  className={[
+                    "w-11 h-11 rounded-2xl flex items-center justify-center",
+                    expiringSummary.expired.length > 0 ? "bg-destructive/15" : "bg-amber-500/15",
+                  ].join(" ")}
+                >
+                  <AlertTriangle
+                    className={[
+                      "h-5 w-5",
+                      expiringSummary.expired.length > 0 ? "text-destructive" : "text-amber-700 dark:text-amber-300",
+                    ].join(" ")}
+                  />
+                </div>
+                <div className="space-y-1">
+                  <p className="text-sm font-semibold text-foreground">
+                    {expiringSummary.expired.length > 0
+                      ? "Tenés mantenimientos vencidos"
+                      : "Tenés mantenimientos por vencer"}
+                  </p>
+                  <p className="text-sm text-muted-foreground">
+                    Te recomendamos reservar un turno para estos servicios.
+                  </p>
+                  <div className="mt-3 space-y-1 text-sm text-foreground/90">
+                    {expiringSummary.expired.length > 0 ? (
+                      <div>
+                        <span className="font-medium">Vencidos:</span>{" "}
+                        {expiringSummary.expired.join(", ")}
+                      </div>
+                    ) : null}
+                    {expiringSummary.expiring.length > 0 ? (
+                      <div>
+                        <span className="font-medium">Por vencer:</span>{" "}
+                        {expiringSummary.expiring.join(", ")}
+                      </div>
+                    ) : null}
+                  </div>
+                </div>
+              </div>
+
+              <div className="flex gap-2 sm:pt-1">
+                <Button asChild className="rounded-xl">
+                  <Link to="/reserve">Reservar turno</Link>
+                </Button>
+                <Button asChild variant="outline" className="rounded-xl">
+                  <Link to="/reminders">Ver recordatorios</Link>
+                </Button>
+              </div>
+            </div>
+          </div>
+        ) : (
+          <div className="rounded-3xl border border-border/50 bg-card p-5 shadow-sm">
+            <div className="flex items-start gap-3">
+              <div className="w-11 h-11 rounded-2xl bg-emerald-500/10 flex items-center justify-center">
+                <ShieldCheck className="h-5 w-5 text-emerald-600 dark:text-emerald-400" />
+              </div>
+              <div className="space-y-1">
+                <p className="text-sm font-semibold text-foreground">Todo en orden</p>
+                <p className="text-sm text-muted-foreground">
+                  Todos los vehículos se encuentran en buen estado.
+                </p>
+              </div>
+            </div>
+          </div>
+        )}
 
         <div className="bg-card rounded-3xl p-6 shadow-sm border border-border/50">
           <div className="flex flex-col sm:flex-row justify-between items-start sm:items-center gap-4 mb-6">
