@@ -11,6 +11,7 @@ import {
   Goal,
   Blocks,
   Bell,
+  FileText,
 } from 'lucide-react'
 import { useState, useEffect } from 'react'
 import { getNextAppointmentsOfUser } from '@/services/appointments'
@@ -104,6 +105,14 @@ export function Home() {
       href: '/reminders',
       gradient: 'from-purple-50 to-purple-100/50',
       iconColor: 'text-purple-600',
+    },
+    {
+      title: 'Ficha técnica',
+      description: 'Revisa la ficha técnica de tus vehículos',
+      icon: FileText,
+      href: '/technical-sheet',
+      gradient: 'from-green-50 to-green-100/50',
+      iconColor: 'text-green-600',
     },
   ]
 

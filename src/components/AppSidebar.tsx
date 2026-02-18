@@ -38,6 +38,7 @@ import {
   Star,
   Goal,
   Gauge,
+  FileText,
 } from "lucide-react";
 
 import {
@@ -157,6 +158,12 @@ export const AppSidebar = ({ children }: { children?: React.ReactNode }) => {
       label: "Recordatorios",
       userRole: [UserRoles.USER],
       icon: <Bell className="size-4" />,
+    },
+    {
+      path: "/technical-sheet",
+      label: "Ficha técnica",
+      userRole: [UserRoles.USER],
+      icon: <FileText className="size-4" />,
     },
   ] as const;
 
