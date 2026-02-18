@@ -252,6 +252,7 @@ export const TechnicalSheet = () => {
                 colorIndex={index}
                 showCompletedServices={true}
                 hasReminder={true}
+                lastServiceDate={vehicle.serviceHistory[0]?.date}
               />
             ))}
           </div>

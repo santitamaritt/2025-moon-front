@@ -16,6 +16,29 @@ import {
 
 export type VehicleStatus = "GOOD" | "MEDIUM" | "CRITICAL" | "NO_STATUS"
 
+const formatLocalDateEsAR = (dateStr: string) => {
+  const m = /^(\d{4})-(\d{2})-(\d{2})$/.exec(dateStr)
+  if (m) {
+    const y = Number(m[1])
+    const mo = Number(m[2])
+    const d = Number(m[3])
+    const dt = new Date(y, mo - 1, d)
+    return dt.toLocaleDateString("es-AR", {
+      day: "numeric",
+      month: "long",
+      year: "numeric",
+    })
+  }
+
+  const dt = new Date(dateStr)
+  if (Number.isNaN(dt.getTime())) return dateStr
+  return dt.toLocaleDateString("es-AR", {
+    day: "numeric",
+    month: "long",
+    year: "numeric",
+  })
+}
+
 export type ReminderSummary = {
   expired: string[]
   expiring: string[]
@@ -106,12 +129,14 @@ export const VehicleTechSheet = ({
   showCompletedServices = true,
   hasReminder = false,
   isMechanic = false,
+  lastServiceDate,
 }: {
   vehicle: TechSheetVehicle
   colorIndex?: number
   showCompletedServices?: boolean
   hasReminder?: boolean
   isMechanic?: boolean
+  lastServiceDate?: string
 }) => {
   const [historyOpen, setHistoryOpen] = useState(false)
   const [historyPage, setHistoryPage] = useState(0)
@@ -139,6 +164,9 @@ export const VehicleTechSheet = ({
               <h3 className="text-xl font-bold text-foreground">{vehicle.model}</h3>
               <p className="text-sm text-muted-foreground font-medium mt-0.5">
                 {vehicle.licensePlate}
+              </p>
+              <p className="text-sm text-muted-foreground font-medium mt-0.5">
+                {lastServiceDate ? formatLocalDateEsAR(lastServiceDate) : "Sin servicio"}
               </p>
             </div>
           </div>
@@ -326,11 +354,7 @@ export const VehicleTechSheet = ({
                         {entry.serviceName}
                       </p>
                       <p className="text-xs text-muted-foreground mt-0.5">
-                        {new Date(entry.date).toLocaleDateString("es-AR", {
-                          day: "numeric",
-                          month: "long",
-                          year: "numeric",
-                        })}
+                        {formatLocalDateEsAR(entry.date)}
                       </p>
                     </div>
                     <StatusBadge status={entry.vehicleStatusAtTime} />
