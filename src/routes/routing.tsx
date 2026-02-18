@@ -18,6 +18,7 @@ import { MechanicDashboard } from "@/pages/MechanicDashboard";
 import { UserDashboard } from "@/pages/UserDashboard";
 import { ReviewMechanic } from "@/pages/ReviewMechanic";
 import { MechanicGoals } from "@/pages/Goals";
+import { Reminders } from "@/pages/Reminders";
 
 export const Routing = () => {
   return (
@@ -39,6 +40,7 @@ export const Routing = () => {
           <Route path="/appointments" element={<AppointmentsReserved />} />
           <Route path="/user-dashboard" element={<UserDashboard />} />
           <Route path="/review-mechanic" element={<ReviewMechanic />} />
+          <Route path="/reminders" element={<Reminders />} />
         </Route>
         <Route
           element={

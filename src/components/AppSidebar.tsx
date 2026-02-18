@@ -149,6 +149,12 @@ export const AppSidebar = ({ children }: { children?: React.ReactNode }) => {
       userRole: [UserRoles.MECHANIC],
       icon: <Goal className="size-4" />,
     },
+    {
+      path: "/reminders",
+      label: "Recordatorios",
+      userRole: [UserRoles.USER],
+      icon: <Bell className="size-4" />,
+    },
   ] as const;
 
   const handleMarkAllAsRead = async () => {

@@ -9,8 +9,8 @@ import {
   ArrowUpFromLine as ChartNoAxesCombined,
   Star,
   Goal,
-  Icon,
   Blocks,
+  Bell,
 } from 'lucide-react'
 import { useState, useEffect } from 'react'
 import { getNextAppointmentsOfUser } from '@/services/appointments'
@@ -96,6 +96,14 @@ export function Home() {
       href: '/review-mechanic',
       gradient: 'from-pink-50 to-pink-100/50',
       iconColor: 'text-pink-600',
+    },
+    {
+      title: 'Recordatorios',
+      description: 'Gestiona tus recordatorios',
+      icon: Bell,
+      href: '/reminders',
+      gradient: 'from-purple-50 to-purple-100/50',
+      iconColor: 'text-purple-600',
     },
   ]
 
