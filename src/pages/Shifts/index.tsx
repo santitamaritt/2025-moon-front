@@ -15,12 +15,20 @@ import { Label } from "@/components/ui/label"
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select"
 import { Button } from "@/components/ui/button"
 import { Badge } from "@/components/ui/badge"
+import { toast } from "sonner"
+import { Dialog, DialogContent, DialogDescription, DialogFooter, DialogHeader, DialogTitle } from "@/components/ui/dialog"
+import { updateVehicleStatus } from "@/services/vehicles"
+import type { VehicleOverallStatus } from "@/types/vehicles.types"
 
 export function Shifts() {
   const [searchTerm, setSearchTerm] = useState("")
   const [currentPage, setCurrentPage] = useState(1)
   const [dateFilter, setDateFilter] = useState<DateFilter | "all">("today")
   const [statusFilter, setStatusFilter] = useState<AppointmentStatus | "all">("PENDING" as AppointmentStatus)
+  const [completeModalOpen, setCompleteModalOpen] = useState(false)
+  const [completeTarget, setCompleteTarget] = useState<Appointment | null>(null)
+  const [selectedVehicleStatus, setSelectedVehicleStatus] = useState<VehicleOverallStatus | null>(null)
+  const [isCompleting, setIsCompleting] = useState(false)
   const itemsPerPage = 10
 
   const fetchShifts = async () => {
@@ -61,6 +69,39 @@ export function Shifts() {
   const startIndex = (currentPage - 1) * itemsPerPage
   const endIndex = startIndex + itemsPerPage
   const currentShifts = sortAppointments(filteredShifts).slice(startIndex, endIndex)
+
+  const openCompleteModal = (appt: Appointment) => {
+    setCompleteTarget(appt)
+    setSelectedVehicleStatus(null)
+    setCompleteModalOpen(true)
+  }
+
+  const closeCompleteModal = () => {
+    if (isCompleting) return
+    setCompleteModalOpen(false)
+    setCompleteTarget(null)
+    setSelectedVehicleStatus(null)
+  }
+
+  const confirmComplete = async () => {
+    if (isCompleting) return
+    if (!completeTarget) return
+    if (!selectedVehicleStatus) return
+
+    setIsCompleting(true)
+    try {
+      await updateVehicleStatus(completeTarget.vehicle.id, { status: selectedVehicleStatus })
+      await changeAppointmentStatus(completeTarget.id, "COMPLETED" as AppointmentStatus)
+      toast.success("Turno completado")
+      closeCompleteModal()
+      refetch()
+    } catch (e) {
+      console.error(e)
+      toast.error("No se pudo completar el turno")
+    } finally {
+      setIsCompleting(false)
+    }
+  }
 
   return (
     <Container>
@@ -220,7 +261,13 @@ export function Shifts() {
                               size="icon"
                               onClick={async (e) => {
                                 e.stopPropagation()
-                                await changeAppointmentStatus(item.id, nextStateOf((item as Appointment).status))
+                                const appt = item as Appointment
+                                const next = nextStateOf(appt.status)
+                                if (appt.status === "SERVICE_COMPLETED" && next === "COMPLETED") {
+                                  openCompleteModal(appt)
+                                  return
+                                }
+                                await changeAppointmentStatus(appt.id, next)
                                 refetch()
                               }}
                               className="rounded-xl text-primary hover:text-green-500 hover:bg-green-500/10"
@@ -257,6 +304,64 @@ export function Shifts() {
           </TooltipProvider>
         </div>
       </div>
+
+      <Dialog
+        open={completeModalOpen}
+        onOpenChange={(open) => {
+          if (!open) closeCompleteModal()
+        }}
+      >
+        <DialogContent className="text-foreground rounded-3xl border-border/50 max-w-xl" showCloseButton={!isCompleting}>
+          <DialogHeader>
+            <DialogTitle className="text-2xl">Turno terminado!</DialogTitle>
+            <DialogDescription>
+              Dale una etiqueta de estado general a este vehiculo:{" "}
+              <span className="font-medium text-foreground">
+                {completeTarget?.vehicle?.licensePlate} {completeTarget?.vehicle?.model}
+              </span>
+            </DialogDescription>
+          </DialogHeader>
+
+          <div className="grid grid-cols-1 sm:grid-cols-3 gap-3 pt-2">
+            {[
+              { label: "BUENO", value: "GOOD" as const, active: "bg-emerald-500/10 border-emerald-500/30 text-emerald-700 dark:text-emerald-300" },
+              { label: "REGULAR", value: "MEDIUM" as const, active: "bg-amber-500/10 border-amber-500/30 text-amber-700 dark:text-amber-300" },
+              { label: "CRITICO", value: "CRITICAL" as const, active: "bg-red-500/10 border-red-500/30 text-red-700 dark:text-red-300" },
+            ].map((opt) => {
+              const isActive = selectedVehicleStatus === opt.value
+              return (
+                <button
+                  key={opt.value}
+                  type="button"
+                  disabled={isCompleting}
+                  onClick={() => setSelectedVehicleStatus(opt.value)}
+                  className={[
+                    "rounded-2xl border px-4 py-4 text-sm font-semibold transition-colors cursor-pointer",
+                    "bg-card hover:bg-accent/30 border-border/50",
+                    isActive ? opt.active : "text-foreground",
+                    isCompleting ? "opacity-70 cursor-not-allowed" : "",
+                  ].join(" ")}
+                >
+                  {opt.label}
+                </button>
+              )
+            })}
+          </div>
+
+          <DialogFooter className="gap-2 pt-2">
+            <Button variant="outline" onClick={closeCompleteModal} disabled={isCompleting} className="rounded-xl">
+              Cancelar
+            </Button>
+            <Button
+              onClick={confirmComplete}
+              disabled={isCompleting || !selectedVehicleStatus}
+              className="rounded-xl"
+            >
+              {isCompleting ? "Confirmando..." : "Confirmar"}
+            </Button>
+          </DialogFooter>
+        </DialogContent>
+      </Dialog>
     </Container>
   )
 }

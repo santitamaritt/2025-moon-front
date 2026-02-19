@@ -37,6 +37,8 @@ import {
   Mail,
   Star,
   Goal,
+  Gauge,
+  FileText,
 } from "lucide-react";
 
 import {
@@ -48,9 +50,11 @@ import type { Notification } from "@/types/notifications.types";
 import { useState } from "react";
 import { Dialog, DialogContent, DialogHeader, DialogTitle } from "./ui/dialog";
 import { Button } from "./ui/button";
+import { UpdateVehicleKmsModal } from "@/components/UpdateVehicleKmsModal";
 
 export const AppSidebar = ({ children }: { children?: React.ReactNode }) => {
   const [openNotifications, setOpenNotifications] = useState(false);
+  const [openUpdateKms, setOpenUpdateKms] = useState(false);
   const location = useLocation();
   const user = useStore((state) => state.user);
   const themeMode = useStore((state) => state.themeMode);
@@ -155,6 +159,12 @@ export const AppSidebar = ({ children }: { children?: React.ReactNode }) => {
       userRole: [UserRoles.USER],
       icon: <Bell className="size-4" />,
     },
+    {
+      path: "/technical-sheet",
+      label: "Ficha técnica",
+      userRole: [UserRoles.USER],
+      icon: <FileText className="size-4" />,
+    },
   ] as const;
 
   const handleMarkAllAsRead = async () => {
@@ -209,6 +219,18 @@ export const AppSidebar = ({ children }: { children?: React.ReactNode }) => {
         </SidebarContent>
         <SidebarFooter>
           <SidebarMenu className="gap-2">
+            {user.userRole === UserRoles.USER ? (
+              <SidebarMenuItem>
+                <SidebarMenuButton
+                  className="hover:bg-sidebar-accent hover:text-sidebar-accent-foreground cursor-pointer"
+                  tooltip="Actualiza tus kms"
+                  onClick={() => setOpenUpdateKms(true)}
+                >
+                  <Gauge className="size-4" />
+                  <span>Actualiza tus kms</span>
+                </SidebarMenuButton>
+              </SidebarMenuItem>
+            ) : null}
             <SidebarMenuItem>
               <SidebarMenuButton
                 className="hover:bg-sidebar-accent hover:text-sidebar-accent-foreground cursor-pointer"
@@ -356,6 +378,7 @@ export const AppSidebar = ({ children }: { children?: React.ReactNode }) => {
           </ul>
         </DialogContent>
       </Dialog>
+      <UpdateVehicleKmsModal open={openUpdateKms} onOpenChange={setOpenUpdateKms} />
     </SidebarProvider>
   );
 };

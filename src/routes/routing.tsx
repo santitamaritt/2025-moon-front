@@ -19,6 +19,7 @@ import { UserDashboard } from "@/pages/UserDashboard";
 import { ReviewMechanic } from "@/pages/ReviewMechanic";
 import { MechanicGoals } from "@/pages/Goals";
 import { Reminders } from "@/pages/Reminders";
+import { TechnicalSheet } from "@/pages/TechnicalSheet";
 
 export const Routing = () => {
   return (
@@ -41,6 +42,7 @@ export const Routing = () => {
           <Route path="/user-dashboard" element={<UserDashboard />} />
           <Route path="/review-mechanic" element={<ReviewMechanic />} />
           <Route path="/reminders" element={<Reminders />} />
+          <Route path="/technical-sheet" element={<TechnicalSheet />} />
         </Route>
         <Route
           element={

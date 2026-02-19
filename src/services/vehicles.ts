@@ -1,4 +1,4 @@
-import type { CreateVehicle, UpdateVehicle } from "@/types/vehicles.types";
+import type { CreateVehicle, UpdateVehicle, UpdateVehicleStatusDto } from "@/types/vehicles.types";
 import { get, post, put, del } from "@/utils/rest-api";
 
 export const createVehicle = (vehicle: CreateVehicle) => {
@@ -7,6 +7,10 @@ export const createVehicle = (vehicle: CreateVehicle) => {
 
 export const updateVehicle = (id: number, vehicle: UpdateVehicle) => {
   return put(`/vehicle/${id}`, vehicle);
+};
+
+export const updateVehicleStatus = (id: number, dto: UpdateVehicleStatusDto) => {
+  return put(`/vehicle/${id}/status`, dto);
 };
 
 export const getVehiclesOfUser = () => {

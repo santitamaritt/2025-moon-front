@@ -241,6 +241,29 @@ export const Reminders = () => {
     }
   }, [reminders, savedState])
 
+  const isConfigured = (r: ReminderConfig) => typeof r.reminderId === "number"
+
+  const hasValidTimeSelection = (r: ReminderConfig) => {
+    if (!r.timeValue) return false
+    if (r.timeValue !== "custom") return true
+    return r.timeCustom.trim() !== ""
+  }
+
+  const hasValidKmSelection = (r: ReminderConfig) => {
+    if (!r.kmValue) return false
+    if (r.kmValue !== "custom") return true
+    return r.kmCustom.trim() !== ""
+  }
+
+  const remindersSorted = useMemo(() => {
+    return [...reminders].sort((a, b) => {
+      const aCfg = isConfigured(a)
+      const bCfg = isConfigured(b)
+      if (aCfg !== bCfg) return aCfg ? -1 : 1
+      return a.serviceName.localeCompare(b.serviceName)
+    })
+  }, [reminders])
+
   const handleRestore = (serviceId: number) => {
     const current = reminders.find((r) => r.serviceId === serviceId)
     if (!current) return
@@ -360,10 +383,16 @@ export const Reminders = () => {
 
           {reminders.length > 0 ? (
             <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
-              {reminders.map((reminder, index) => {
+              {remindersSorted.map((reminder, index) => {
                 const color = GRADIENT_COLORS[index % GRADIENT_COLORS.length]
                 const dirty = isDirty(reminder.serviceId)
                 const hasReminder = typeof reminder.reminderId === "number"
+                const hasBothSelections = hasValidTimeSelection(reminder) && hasValidKmSelection(reminder)
+                const canSave =
+                  dirty &&
+                  hasBothSelections &&
+                  savingServiceId !== reminder.serviceId &&
+                  deletingServiceId !== reminder.serviceId
 
                 return (
                   <div
@@ -505,7 +534,7 @@ export const Reminders = () => {
                         <Button
                           onClick={() => handleSave(reminder.serviceId)}
                           className="flex-1 rounded-xl h-10 shadow-sm hover:shadow-md transition-all duration-200 gap-2"
-                          disabled={savingServiceId === reminder.serviceId || deletingServiceId === reminder.serviceId}
+                          disabled={!canSave}
                         >
                           <Save className="h-3.5 w-3.5" />
                           Guardar
