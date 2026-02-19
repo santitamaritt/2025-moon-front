@@ -74,7 +74,6 @@ export const TechnicalSheet = () => {
           if (id) vehicleById.set(id, v)
         }
 
-        // si en history aparece un vehículo que no vino en /vehicle/user, igual lo mostramos
         for (const [vid, appts] of apptsByVehicleId.entries()) {
           if (vehicleById.has(vid)) continue
           const fromHistory = appts.find((a) => toNumber(a?.vehicle?.id) === vid)?.vehicle
@@ -146,8 +145,8 @@ export const TechnicalSheet = () => {
             const pending = new Set<string>()
 
             for (const appt of appts) {
-              const isCompleted = ["COMPLETED", "SERVICE_COMPLETED"].includes(String(appt?.status))
-              const isPending = ["PENDING", "CONFIRMED", "IN_SERVICE"].includes(String(appt?.status))
+              const isCompleted = String(appt?.status) === "COMPLETED"
+              const isPending = ["PENDING", "CONFIRMED", "IN_SERVICE", "SERVICE_COMPLETED"].includes(String(appt?.status))
 
               for (const s of appt?.services || []) {
                 const name =
@@ -163,7 +162,7 @@ export const TechnicalSheet = () => {
             }
 
             const serviceHistory = appts
-              .filter((appt) => ["COMPLETED", "SERVICE_COMPLETED"].includes(String(appt?.status)))
+              .filter((appt) => String(appt?.status) === "COMPLETED")
               .map((appt) => {
                 const names = (appt?.services || [])
                   .map((s) => (typeof s?.name === "string" ? s.name : ""))
